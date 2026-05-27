@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lutz auf Tour — Rödlitzer Straße</title>
+<style>
+  :root {
+    --tiefblau: #1C3A5E;
+    --cream: #F2EDE3;
+    --senfgold: #D4A437;
+    --moosgruen: #3A5A47;
+    --dark: #0F2138;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--tiefblau);
+    font-family: 'Courier New', monospace;
+    color: var(--cream);
+    touch-action: none;
+    user-select: none;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 8px;
+  }
+
+  .frame {
+    width: 100%;
+    max-width: 520px;
+    background: var(--dark);
+    border: 4px solid var(--senfgold);
+    border-radius: 6px;
+    padding: 10px;
+    box-shadow: 0 0 0 4px var(--tiefblau), 0 0 40px rgba(212, 164, 55, 0.2);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px 8px;
+    border-bottom: 2px dashed var(--senfgold);
+    margin-bottom: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  .title { color: var(--senfgold); font-weight: bold; }
+  .stats { display: flex; gap: 12px; }
+  .stat strong { color: var(--senfgold); }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    background: var(--moosgruen);
+    border: 2px solid var(--cream);
+  }
+
+  .dpad {
+    display: grid;
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows: 60px 60px 60px;
+    gap: 4px;
+    margin: 10px auto 0;
+    justify-content: center;
+  }
+
+  .dpad-btn {
+    background: var(--senfgold);
+    color: var(--tiefblau);
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a17f1f;
+    transition: transform 0.05s, box-shadow 0.05s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dpad-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #a17f1f;
+  }
+
+  .dpad-btn.empty {
+    background: transparent;
+    box-shadow: none;
+    pointer-events: none;
+  }
+
+  .dpad-btn.action {
+    background: var(--cream);
+    color: var(--tiefblau);
+    font-size: 11px;
+    letter-spacing: 1px;
+    box-shadow: 0 3px 0 #b8b1a0;
+  }
+
+  .dpad-btn.action:active {
+    box-shadow: 0 1px 0 #b8b1a0;
+  }
+
+  .footer {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 9px;
+    color: rgba(242, 237, 227, 0.5);
+    letter-spacing: 1.5px;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 33, 56, 0.94);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    z-index: 10;
+  }
+
+  .overlay h1 {
+    color: var(--senfgold);
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .overlay p {
+    font-size: 11px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    max-width: 340px;
+  }
+
+  .overlay .big {
+    color: var(--senfgold);
+    font-size: 28px;
+    margin: 4px 0 12px;
+  }
+
+  .overlay .btn {
+    background: var(--senfgold);
+    color: var(--tiefblau);
+    border: none;
+    padding: 14px 28px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #a17f1f;
+  }
+
+  .overlay .btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #a17f1f;
+  }
+
+  .canvas-wrap { position: relative; }
+
+  .dialog {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    background: var(--cream);
+    color: var(--tiefblau);
+    border: 3px solid var(--tiefblau);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 4px 0 var(--senfgold);
+    display: none;
+    z-index: 5;
+  }
+
+  .dialog.show { display: block; }
+
+  .dialog .speaker {
+    color: var(--senfgold);
+    font-weight: bold;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  .dialog .text {
+    color: var(--tiefblau);
+    font-family: Georgia, serif;
+    font-style: italic;
+  }
+
+  .dialog .next-hint {
+    text-align: right;
+    color: var(--moosgruen);
+    font-size: 9px;
+    margin-top: 6px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .hint {
+    font-size: 10px;
+    color: var(--moosgruen);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  .interact-prompt {
+    position: absolute;
+    background: var(--senfgold);
+    color: var(--tiefblau);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    pointer-events: none;
+    display: none;
+    z-index: 4;
+    box-shadow: 0 2px 0 #a17f1f;
+  }
+
+  .interact-prompt.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="header">
+    <div class="title">★ LUTZ AUF TOUR ★</div>
+    <div class="stats">
+      <div class="stat">ANWOHNER <strong id="visited">0</strong>/<strong id="total">0</strong></div>
+      <div class="stat">ZEIT <strong id="timer">00:00</strong></div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="game" width="480" height="320"></canvas>
+
+    <div class="dialog" id="dialog">
+      <div class="speaker" id="speaker">ANWOHNER</div>
+      <div class="text" id="dialogText">...</div>
+      <div class="next-hint blink">▼ TIPPEN ZUM WEITERLESEN</div>
+    </div>
+
+    <div class="interact-prompt" id="interactPrompt">▲ A</div>
+
+    <div class="overlay" id="startOverlay">
+      <h1>★ LUTZ AUF TOUR ★</h1>
+      <p style="margin-top:-8px; color: var(--cream)">
+        Die Rödlitzer Straße ist fertig.<br>
+        Zeit für den Bürgermeister, Hallo zu sagen.
+      </p>
+      <p>
+        🚶 <strong>BEWEGEN</strong> mit dem D-Pad<br>
+        💬 <strong>SPRECHEN</strong> mit Anwohnern bei <strong>A</strong><br>
+        🎯 <strong>ZIEL:</strong> Alle Anwohner besuchen
+      </p>
+      <button class="btn" id="startBtn">TOUR STARTEN</button>
+    </div>
+
+    <div class="overlay" id="endOverlay" style="display:none">
+      <h1 id="endTitle">★ TOUR GESCHAFFT ★</h1>
+      <div class="big" id="endTime">00:00</div>
+      <p id="endMsg">Alle Anwohner besucht.<br>Lutz kann zufrieden sein.</p>
+      <button class="btn" id="restartBtn">NOCHMAL</button>
+    </div>
+  </div>
+
+  <div class="dpad">
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="up">▲</button>
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="left">◀</button>
+    <button class="dpad-btn action" id="actionBtn">A</button>
+    <button class="dpad-btn" data-dir="right">▶</button>
+    <div class="dpad-btn empty"></div>
+    <button class="dpad-btn" data-dir="down">▼</button>
+    <div class="dpad-btn empty"></div>
+  </div>
+
+  <div class="footer">@GEMEINDE_HOHNDORF • RÖDLITZER STR.</div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const W = canvas.width;   // 480
+const H = canvas.height;  // 320
+
+// ============== WORLD ==============
+// World is bigger than viewport — camera scrolls
+const WORLD_W = 800;
+const WORLD_H = 320;
+
+// Road runs horizontally across the middle of the world
+const ROAD_Y = 130;
+const ROAD_H = 80;
+
+// ============== STATE ==============
+let state = 'start';
+let cameraX = 0;
+let timeStart = 0;
+let timeNow = 0;
+let visitedCount = 0;
+
+// ============== LUTZ (player) ==============
+const lutz = {
+  x: 60,
+  y: ROAD_Y + 40,
+  w: 14,
+  h: 22,
+  speed: 1.6,
+  dir: 'down',  // 'up' 'down' 'left' 'right'
+  animFrame: 0,
+  moving: false
+};
+
+// ============== ANWOHNER ==============
+const residents = [
+  {
+    id: 'frau-mueller',
+    name: 'FRAU MÜLLER',
+    x: 130, y: ROAD_Y - 15,
+    color: '#c08070', // rosa-cardigan
+    hairColor: '#888',
+    dialog: [
+      "Ach, Herr Bürgermeister! Endlich!",
+      "Was war das nur für ein Theater mit der Baustelle.",
+      "Aber jetzt — schön ist sie geworden, die Straße."
+    ],
+    visited: false
+  },
+  {
+    id: 'herr-schmidt',
+    name: 'HERR SCHMIDT',
+    x: 240, y: ROAD_Y + ROAD_H + 12,
+    color: '#5a7a5a', // gruen-jacke
+    hairColor: '#3a3a3a',
+    dialog: [
+      "Tag, Lutz! Mensch, das hat ja gedauert.",
+      "Aber die GTA-6-Sache — gut gemacht. Meine Enkel haben gelacht.",
+      "Sag mal, wann ist eigentlich das nächste Dorffest?"
+    ],
+    visited: false
+  },
+  {
+    id: 'opa-richter',
+    name: 'OPA RICHTER',
+    x: 370, y: ROAD_Y - 18,
+    color: '#7a6a4a', // braune-strickjacke
+    hairColor: '#d0d0d0',
+    dialog: [
+      "Jung, hör mal zu.",
+      "Sechzig Jahre wohn ich hier. Die Straße war schon immer ein Sorgenkind.",
+      "Aber jetzt — jetzt is gut. Daumen hoch."
+    ],
+    visited: false
+  },
+  {
+    id: 'familie-weber',
+    name: 'JONAS (8)',
+    x: 500, y: ROAD_Y + ROAD_H + 14,
+    color: '#4a6ab0', // blau-shirt
+    hairColor: '#7a4a2a',
+    dialog: [
+      "Hi! Bist du echt der Bürgermeister?",
+      "Mein Papa hat gesagt, du bist im Internet!",
+      "Kannst du Kimbo mal mitbringen? Bitte bitte!"
+    ],
+    visited: false
+  },
+  {
+    id: 'frau-keller',
+    name: 'FRAU KELLER',
+    x: 620, y: ROAD_Y - 16,
+    color: '#a06090', // lila-bluse
+    hairColor: '#6a4a2a',
+    dialog: [
+      "Endlich kann ich wieder normal zur Arbeit fahren.",
+      "Wissen Sie, was ich gut fand? Dass Sie ehrlich kommuniziert haben.",
+      "Das macht nicht jeder Bürgermeister. Danke dafür."
+    ],
+    visited: false
+  },
+  {
+    id: 'herr-becker',
+    name: 'HERR BECKER',
+    x: 730, y: ROAD_Y + ROAD_H + 12,
+    color: '#7a3a3a', // dunkelrot-pullover
+    hairColor: '#aaaaaa',
+    dialog: [
+      "Bürgermeister! Frage: Können wir hier Tempo 30 machen?",
+      "Wegen der Kinder, verstehen Sie.",
+      "Aber jetzt erstmal: Glückwunsch zur Eröffnung."
+    ],
+    visited: false
+  }
+];
+
+document.getElementById('total').textContent = residents.length;
+
+// ============== BUILDINGS ==============
+// Houses along the street — top side and bottom side
+const buildings = [
+  // Top side
+  { x: 30,  y: 30,  w: 80,  h: 80,  color: '#b8856a', roof: '#5a3a2a', windows: [[10,15],[40,15],[10,40],[40,40]], door: [25, 60] },
+  { x: 130, y: 25,  w: 70,  h: 85,  color: '#a89870', roof: '#4a3a25', windows: [[10,15],[40,15],[10,45]], door: [25, 65] },
+  { x: 215, y: 35,  w: 90,  h: 75,  color: '#c4a880', roof: '#5a4030', windows: [[12,15],[42,15],[68,15],[12,40],[42,40],[68,40]], door: [35, 55] },
+  { x: 320, y: 28,  w: 75,  h: 82,  color: '#9a7858', roof: '#4a2820', windows: [[12,15],[45,15],[12,42],[45,42]], door: [25, 62] },
+  { x: 410, y: 30,  w: 100, h: 80,  color: '#b09076', roof: '#553522', windows: [[12,15],[42,15],[72,15],[12,42],[42,42],[72,42]], door: [40, 60] },
+  { x: 525, y: 25,  w: 80,  h: 85,  color: '#a8806a', roof: '#4a3020', windows: [[12,15],[45,15],[12,42]], door: [28, 62] },
+  { x: 620, y: 32,  w: 90,  h: 78,  color: '#c0a888', roof: '#5a4030', windows: [[12,15],[42,15],[68,15],[12,42],[42,42]], door: [32, 56] },
+  { x: 725, y: 28,  w: 60,  h: 82,  color: '#9a8060', roof: '#4a3525', windows: [[10,15],[35,15],[10,42]], door: [20, 60] },
+  // Bottom side
+  { x: 25,  y: 230, w: 75,  h: 78,  color: '#7a8a6a', roof: '#3a4530', windows: [[10,15],[40,15],[10,40],[40,40]], door: [25, 55] },
+  { x: 115, y: 232, w: 85,  h: 76,  color: '#8a7a5a', roof: '#403525', windows: [[12,15],[45,15],[12,40],[45,40]], door: [30, 55] },
+  { x: 215, y: 228, w: 70,  h: 82,  color: '#a09880', roof: '#4a4030', windows: [[10,15],[40,15],[10,45]], door: [25, 60] },
+  { x: 300, y: 234, w: 95,  h: 76,  color: '#b09078', roof: '#553522', windows: [[12,15],[42,15],[68,15],[12,42],[42,42],[68,42]], door: [38, 55] },
+  { x: 410, y: 230, w: 80,  h: 80,  color: '#9a7a5a', roof: '#4a3025', windows: [[12,15],[45,15],[12,42]], door: [30, 58] },
+  { x: 505, y: 228, w: 90,  h: 82,  color: '#a89070', roof: '#503525', windows: [[12,15],[42,15],[68,15],[12,42],[42,42]], door: [32, 60] },
+  { x: 610, y: 234, w: 75,  h: 76,  color: '#806a4a', roof: '#3a2818', windows: [[10,15],[40,15],[10,42]], door: [25, 55] },
+  { x: 700, y: 230, w: 85,  h: 80,  color: '#c0a888', roof: '#5a4030', windows: [[12,15],[42,15],[68,15],[12,42],[42,42]], door: [30, 58] },
+];
+
+// Trees scattered
+const trees = [
+  { x: 105, y: 100 }, { x: 308, y: 95 }, { x: 515, y: 100 }, { x: 715, y: 98 },
+  { x: 100, y: 220 }, { x: 295, y: 218 }, { x: 495, y: 222 }, { x: 690, y: 220 },
+];
+
+// Lamp posts
+const lamps = [
+  { x: 80, y: ROAD_Y - 2 }, { x: 200, y: ROAD_Y - 2 }, { x: 340, y: ROAD_Y - 2 },
+  { x: 460, y: ROAD_Y - 2 }, { x: 600, y: ROAD_Y - 2 }, { x: 720, y: ROAD_Y - 2 },
+  { x: 140, y: ROAD_Y + ROAD_H + 2 }, { x: 280, y: ROAD_Y + ROAD_H + 2 },
+  { x: 420, y: ROAD_Y + ROAD_H + 2 }, { x: 560, y: ROAD_Y + ROAD_H + 2 },
+  { x: 680, y: ROAD_Y + ROAD_H + 2 },
+];
+
+// ============== INPUT ==============
+const keys = { up: false, down: false, left: false, right: false, action: false };
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'ArrowUp' || e.code === 'KeyW') { keys.up = true; e.preventDefault(); }
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') { keys.down = true; e.preventDefault(); }
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') { keys.left = true; e.preventDefault(); }
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') { keys.right = true; e.preventDefault(); }
+  if (e.code === 'Space' || e.code === 'Enter') {
+    if (state === 'start' || state === 'won') {
+      startGame();
+    } else {
+      handleAction();
+    }
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false;
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = false;
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+});
+
+// D-Pad touch
+document.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => {
+  const dir = btn.dataset.dir;
+  const press = (e) => { e.preventDefault(); keys[dir] = true; };
+  const release = (e) => { e.preventDefault(); keys[dir] = false; };
+  btn.addEventListener('touchstart', press, { passive: false });
+  btn.addEventListener('touchend', release, { passive: false });
+  btn.addEventListener('touchcancel', release, { passive: false });
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+});
+
+document.getElementById('actionBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  handleAction();
+});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('dialog').addEventListener('click', advanceDialog);
+
+// ============== DIALOG SYSTEM ==============
+let currentDialog = null;
+let dialogIndex = 0;
+let dialogResident = null;
+
+function startDialog(resident) {
+  if (currentDialog) return;
+  currentDialog = resident.dialog;
+  dialogResident = resident;
+  dialogIndex = 0;
+  showDialogLine();
+}
+
+function showDialogLine() {
+  const dialog = document.getElementById('dialog');
+  const speaker = document.getElementById('speaker');
+  const text = document.getElementById('dialogText');
+  speaker.textContent = dialogResident.name;
+  text.textContent = currentDialog[dialogIndex];
+  dialog.classList.add('show');
+}
+
+function advanceDialog() {
+  if (!currentDialog) return;
+  dialogIndex++;
+  if (dialogIndex >= currentDialog.length) {
+    endDialog();
+  } else {
+    showDialogLine();
+  }
+}
+
+function endDialog() {
+  document.getElementById('dialog').classList.remove('show');
+  if (!dialogResident.visited) {
+    dialogResident.visited = true;
+    visitedCount++;
+    document.getElementById('visited').textContent = visitedCount;
+    if (visitedCount >= residents.length) {
+      setTimeout(endGame, 600);
+    }
+  }
+  currentDialog = null;
+  dialogResident = null;
+}
+
+// ============== ACTION ==============
+function handleAction() {
+  if (state !== 'playing') return;
+  if (currentDialog) {
+    advanceDialog();
+    return;
+  }
+  const nearby = findNearbyResident();
+  if (nearby) startDialog(nearby);
+}
+
+function findNearbyResident() {
+  for (const r of residents) {
+    const dx = (lutz.x + lutz.w/2) - (r.x + 7);
+    const dy = (lutz.y + lutz.h/2) - (r.y + 11);
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 28) return r;
+  }
+  return null;
+}
+
+// ============== GAME FLOW ==============
+function startGame() {
+  state = 'playing';
+  lutz.x = 60;
+  lutz.y = ROAD_Y + 40;
+  lutz.dir = 'right';
+  lutz.animFrame = 0;
+  cameraX = 0;
+  visitedCount = 0;
+  residents.forEach(r => r.visited = false);
+  document.getElementById('visited').textContent = 0;
+  document.getElementById('startOverlay').style.display = 'none';
+  document.getElementById('endOverlay').style.display = 'none';
+  document.getElementById('dialog').classList.remove('show');
+  currentDialog = null;
+  timeStart = Date.now();
+}
+
+function endGame() {
+  state = 'won';
+  const elapsed = Math.floor((Date.now() - timeStart) / 1000);
+  const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const secs = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('endTime').textContent = `${mins}:${secs}`;
+  document.getElementById('endOverlay').style.display = 'flex';
+}
+
+// ============== UPDATE ==============
+function update() {
+  if (state !== 'playing') return;
+
+  // Timer
+  const elapsed = Math.floor((Date.now() - timeStart) / 1000);
+  const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const secs = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('timer').textContent = `${mins}:${secs}`;
+
+  // Don't move during dialog
+  if (currentDialog) return;
+
+  // Movement
+  let dx = 0, dy = 0;
+  if (keys.up) dy -= 1;
+  if (keys.down) dy += 1;
+  if (keys.left) dx -= 1;
+  if (keys.right) dx += 1;
+
+  if (dx !== 0 && dy !== 0) {
+    dx *= 0.707;
+    dy *= 0.707;
+  }
+
+  lutz.moving = (dx !== 0 || dy !== 0);
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    lutz.dir = dx > 0 ? 'right' : 'left';
+  } else if (dy !== 0) {
+    lutz.dir = dy > 0 ? 'down' : 'up';
+  }
+
+  // Move with collision against world bounds
+  const newX = lutz.x + dx * lutz.speed;
+  const newY = lutz.y + dy * lutz.speed;
+
+  // Constrain to street + sidewalks area (not in houses)
+  // Walking area: y between ROAD_Y - 25 (top sidewalk into front yards) and ROAD_Y + ROAD_H + 25
+  if (newX >= 10 && newX <= WORLD_W - lutz.w - 10) lutz.x = newX;
+  if (newY >= ROAD_Y - 28 && newY <= ROAD_Y + ROAD_H + 28) lutz.y = newY;
+
+  if (lutz.moving) lutz.animFrame += 0.18;
+
+  // Camera follows
+  const targetCamX = lutz.x - W / 2 + lutz.w / 2;
+  cameraX = Math.max(0, Math.min(WORLD_W - W, targetCamX));
+
+  // Update interact prompt
+  const nearby = findNearbyResident();
+  const prompt = document.getElementById('interactPrompt');
+  if (nearby && !nearby.visited) {
+    const screenX = (nearby.x - cameraX) / WORLD_W * canvas.offsetWidth;
+    const screenY = (nearby.y - 24) / WORLD_H * canvas.offsetHeight;
+    prompt.style.left = (screenX - 12) + 'px';
+    prompt.style.top = screenY + 'px';
+    prompt.textContent = '▲ A';
+    prompt.classList.add('show');
+  } else {
+    prompt.classList.remove('show');
+  }
+}
+
+// ============== DRAWING ==============
+function clear() {
+  // grass base
+  ctx.fillStyle = '#5a7a4a';
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawGrass() {
+  // Grass texture — small dots
+  ctx.fillStyle = '#4a6a3a';
+  for (let y = 0; y < H; y += 8) {
+    for (let x = 0; x < W; x += 8) {
+      const worldX = x + cameraX;
+      // pseudo-random based on position
+      if (((worldX * 7 + y * 13) % 19) < 3) {
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+  }
+  // Slightly lighter patches
+  ctx.fillStyle = '#6a8a5a';
+  for (let y = 0; y < H; y += 12) {
+    for (let x = 0; x < W; x += 12) {
+      const worldX = x + cameraX;
+      if (((worldX * 11 + y * 17) % 23) < 2) {
+        ctx.fillRect(x, y, 3, 2);
+      }
+    }
+  }
+}
+
+function drawRoad() {
+  const y = ROAD_Y;
+
+  // Sidewalks (top)
+  ctx.fillStyle = '#a8a098';
+  ctx.fillRect(-cameraX, y - 8, WORLD_W, 8);
+  ctx.fillStyle = '#888078';
+  ctx.fillRect(-cameraX, y - 8, WORLD_W, 1);
+  // sidewalk tile divisions
+  ctx.fillStyle = '#888078';
+  for (let i = 0; i < WORLD_W; i += 16) {
+    ctx.fillRect(i - cameraX, y - 8, 1, 8);
+  }
+
+  // Road
+  ctx.fillStyle = '#3a3530';
+  ctx.fillRect(-cameraX, y, WORLD_W, ROAD_H);
+
+  // Road texture noise
+  ctx.fillStyle = '#2a2520';
+  for (let yy = y; yy < y + ROAD_H; yy += 6) {
+    for (let xx = 0; xx < WORLD_W; xx += 6) {
+      if (((xx * 7 + yy * 11) % 17) < 2) {
+        ctx.fillRect(xx - cameraX, yy, 2, 1);
+      }
+    }
+  }
+
+  // Center stripes
+  ctx.fillStyle = '#e8c850';
+  for (let x = 0; x < WORLD_W; x += 50) {
+    ctx.fillRect(x - cameraX, y + ROAD_H/2 - 1, 30, 3);
+  }
+
+  // Edge lines
+  ctx.fillStyle = '#d0d0c0';
+  ctx.fillRect(-cameraX, y + 4, WORLD_W, 1);
+  ctx.fillRect(-cameraX, y + ROAD_H - 5, WORLD_W, 1);
+
+  // Sidewalks (bottom)
+  ctx.fillStyle = '#a8a098';
+  ctx.fillRect(-cameraX, y + ROAD_H, WORLD_W, 8);
+  ctx.fillStyle = '#888078';
+  ctx.fillRect(-cameraX, y + ROAD_H + 7, WORLD_W, 1);
+  for (let i = 0; i < WORLD_W; i += 16) {
+    ctx.fillRect(i - cameraX, y + ROAD_H, 1, 8);
+  }
+
+  // "Frisch eröffnet" banner at street start
+  drawBanner(60);
+}
+
+function drawBanner(worldX) {
+  const x = worldX - cameraX;
+  if (x < -100 || x > W + 100) return;
+  // Two poles
+  ctx.fillStyle = '#4a3a25';
+  ctx.fillRect(x, ROAD_Y - 35, 2, 30);
+  ctx.fillRect(x + 70, ROAD_Y - 35, 2, 30);
+  // Banner cloth
+  ctx.fillStyle = '#D4A437';
+  ctx.fillRect(x, ROAD_Y - 35, 72, 14);
+  ctx.fillStyle = '#a17f1f';
+  ctx.fillRect(x, ROAD_Y - 22, 72, 1);
+  // Text
+  ctx.fillStyle = '#1C3A5E';
+  ctx.font = 'bold 8px monospace';
+  ctx.fillText('RÖDLITZER STR.', x + 6, ROAD_Y - 25);
+  // Small flags
+  ctx.fillStyle = '#F2EDE3';
+  ctx.fillRect(x + 18, ROAD_Y - 40, 4, 3);
+  ctx.fillRect(x + 36, ROAD_Y - 40, 4, 3);
+  ctx.fillRect(x + 54, ROAD_Y - 40, 4, 3);
+}
+
+function drawBuilding(b) {
+  const x = b.x - cameraX;
+  if (x + b.w < 0 || x > W) return;
+
+  // Shadow on ground
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(x + 3, b.y + b.h, b.w, 4);
+
+  // Body
+  ctx.fillStyle = b.color;
+  ctx.fillRect(x, b.y, b.w, b.h);
+
+  // Lighter top edge
+  ctx.fillStyle = lighten(b.color, 0.15);
+  ctx.fillRect(x, b.y, b.w, 2);
+
+  // Darker bottom shade
+  ctx.fillStyle = darken(b.color, 0.2);
+  ctx.fillRect(x, b.y + b.h - 4, b.w, 4);
+
+  // Roof
+  ctx.fillStyle = b.roof;
+  ctx.fillRect(x - 2, b.y - 6, b.w + 4, 6);
+  ctx.fillStyle = lighten(b.roof, 0.15);
+  ctx.fillRect(x - 2, b.y - 6, b.w + 4, 2);
+
+  // Roof tiles texture
+  ctx.fillStyle = darken(b.roof, 0.15);
+  for (let i = 0; i < b.w + 4; i += 4) {
+    ctx.fillRect(x - 2 + i, b.y - 4, 1, 4);
+  }
+
+  // Windows
+  for (const [wx, wy] of b.windows) {
+    drawWindow(x + wx, b.y + wy);
+  }
+
+  // Door
+  if (b.door) {
+    const [dx, dy] = b.door;
+    drawDoor(x + dx, b.y + dy);
+  }
+}
+
+function drawWindow(x, y) {
+  // Frame
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(x, y, 14, 12);
+  // Glass
+  ctx.fillStyle = '#8aa8c0';
+  ctx.fillRect(x + 1, y + 1, 12, 10);
+  // Highlight
+  ctx.fillStyle = '#b0c8d8';
+  ctx.fillRect(x + 1, y + 1, 5, 4);
+  // Cross frame
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(x + 6, y + 1, 1, 10);
+  ctx.fillRect(x + 1, y + 5, 12, 1);
+  // Sill
+  ctx.fillStyle = '#5a4a3a';
+  ctx.fillRect(x - 1, y + 12, 16, 2);
+}
+
+function drawDoor(x, y) {
+  ctx.fillStyle = '#3a2818';
+  ctx.fillRect(x, y, 10, 16);
+  ctx.fillStyle = '#5a3825';
+  ctx.fillRect(x + 1, y + 1, 8, 14);
+  // Door panels
+  ctx.fillStyle = '#3a2818';
+  ctx.fillRect(x + 1, y + 7, 8, 1);
+  // Handle
+  ctx.fillStyle = '#D4A437';
+  ctx.fillRect(x + 7, y + 9, 1, 2);
+  // Step
+  ctx.fillStyle = '#888078';
+  ctx.fillRect(x - 1, y + 16, 12, 2);
+}
+
+function drawTree(t) {
+  const x = t.x - cameraX;
+  if (x < -30 || x > W + 30) return;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(x - 5, t.y + 22, 22, 4);
+
+  // Trunk
+  ctx.fillStyle = '#5a3825';
+  ctx.fillRect(x + 4, t.y + 18, 4, 8);
+  ctx.fillStyle = '#3a2418';
+  ctx.fillRect(x + 4, t.y + 18, 1, 8);
+
+  // Foliage (chunky layers)
+  ctx.fillStyle = '#3a5530';
+  ctx.fillRect(x - 4, t.y + 4, 20, 16);
+  ctx.fillRect(x - 2, t.y, 16, 4);
+  ctx.fillRect(x + 2, t.y - 3, 8, 3);
+
+  // Highlights
+  ctx.fillStyle = '#5a7540';
+  ctx.fillRect(x - 2, t.y + 6, 4, 4);
+  ctx.fillRect(x + 6, t.y + 2, 4, 3);
+  ctx.fillRect(x + 10, t.y + 8, 3, 3);
+
+  // Dark spots
+  ctx.fillStyle = '#2a3a20';
+  ctx.fillRect(x + 4, t.y + 14, 3, 3);
+  ctx.fillRect(x + 11, t.y + 12, 2, 4);
+}
+
+function drawLamp(l) {
+  const x = l.x - cameraX;
+  if (x < -10 || x > W + 10) return;
+
+  // Base
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(x, l.y, 4, 2);
+  // Pole
+  ctx.fillStyle = '#3a3530';
+  ctx.fillRect(x + 1, l.y - 16, 2, 16);
+  // Lamp head
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(x - 2, l.y - 22, 8, 6);
+  // Light
+  ctx.fillStyle = '#D4A437';
+  ctx.fillRect(x - 1, l.y - 21, 6, 4);
+  // Bright center
+  ctx.fillStyle = '#f5e090';
+  ctx.fillRect(x + 1, l.y - 20, 2, 2);
+}
+
+function drawResident(r) {
+  const x = r.x - cameraX;
+  const y = r.y;
+  if (x < -20 || x > W + 20) return;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x + 2, y + 21, 10, 3);
+
+  // Visited checkmark above
+  if (r.visited) {
+    ctx.fillStyle = '#3A5A47';
+    ctx.fillRect(x + 3, y - 8, 8, 6);
+    ctx.fillStyle = '#F2EDE3';
+    // checkmark
+    ctx.fillRect(x + 5, y - 4, 1, 1);
+    ctx.fillRect(x + 6, y - 3, 1, 1);
+    ctx.fillRect(x + 7, y - 4, 1, 1);
+    ctx.fillRect(x + 8, y - 5, 1, 1);
+    ctx.fillRect(x + 9, y - 6, 1, 1);
+  } else {
+    // Bouncing ! mark
+    const bob = Math.sin(Date.now() / 200) * 1;
+    ctx.fillStyle = '#D4A437';
+    ctx.fillRect(x + 6, y - 9 + bob, 2, 5);
+    ctx.fillRect(x + 6, y - 3 + bob, 2, 1);
+  }
+
+  drawPerson(x, y, r.color, r.hairColor, 'down', 0);
+}
+
+function drawPerson(x, y, shirtColor, hairColor, dir, animFrame) {
+  // Pixel-art person, ~14x22 pixels
+  // y is top of head
+
+  // Head (skin)
+  const skinColor = '#e8b08a';
+  const skinShadow = '#c89070';
+  ctx.fillStyle = skinColor;
+  ctx.fillRect(x + 4, y + 2, 6, 6);
+  // Shadow on right of face
+  ctx.fillStyle = skinShadow;
+  ctx.fillRect(x + 8, y + 3, 2, 4);
+
+  // Hair
+  ctx.fillStyle = hairColor;
+  if (dir === 'down') {
+    ctx.fillRect(x + 3, y, 8, 4);
+    ctx.fillRect(x + 4, y - 1, 6, 1);
+  } else if (dir === 'up') {
+    ctx.fillRect(x + 3, y, 8, 5);
+  } else {
+    ctx.fillRect(x + 3, y, 8, 4);
+    if (dir === 'right') ctx.fillRect(x + 3, y + 2, 1, 2);
+    if (dir === 'left') ctx.fillRect(x + 10, y + 2, 1, 2);
+  }
+
+  // Eyes
+  if (dir === 'down') {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x + 5, y + 4, 1, 1);
+    ctx.fillRect(x + 8, y + 4, 1, 1);
+  } else if (dir === 'left') {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x + 4, y + 4, 1, 1);
+  } else if (dir === 'right') {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x + 9, y + 4, 1, 1);
+  }
+
+  // Body / shirt
+  ctx.fillStyle = shirtColor;
+  ctx.fillRect(x + 2, y + 8, 10, 9);
+  // Shirt shadow
+  ctx.fillStyle = darken(shirtColor, 0.2);
+  ctx.fillRect(x + 9, y + 9, 3, 8);
+  ctx.fillRect(x + 2, y + 16, 10, 1);
+
+  // Arms (slightly different colors at hands)
+  ctx.fillStyle = shirtColor;
+  ctx.fillRect(x + 1, y + 9, 1, 6);
+  ctx.fillRect(x + 12, y + 9, 1, 6);
+  ctx.fillStyle = skinColor;
+  ctx.fillRect(x + 1, y + 15, 1, 2);
+  ctx.fillRect(x + 12, y + 15, 1, 2);
+
+  // Legs (animated)
+  ctx.fillStyle = '#2a3550';
+  const legOffset = Math.floor(animFrame) % 2;
+  if (legOffset === 0) {
+    ctx.fillRect(x + 4, y + 17, 2, 5);
+    ctx.fillRect(x + 8, y + 17, 2, 4);
+  } else {
+    ctx.fillRect(x + 4, y + 17, 2, 4);
+    ctx.fillRect(x + 8, y + 17, 2, 5);
+  }
+  // Shoes
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(x + 3, y + 21, 3, 1);
+  ctx.fillRect(x + 8, y + 21, 3, 1);
+}
+
+function drawLutz() {
+  const x = lutz.x - cameraX;
+  const y = lutz.y;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x + 2, y + 21, 10, 3);
+
+  drawPerson(
+    x, y,
+    '#1C3A5E',  // Tiefblau blazer — markenfarbe
+    '#5a4530',  // braun-graue Haare
+    lutz.dir,
+    lutz.moving ? lutz.animFrame : 0
+  );
+
+  // Lutz-specific: hint of yellow tie or detail
+  ctx.fillStyle = '#D4A437';
+  ctx.fillRect(x + 6, y + 9, 2, 4);
+
+  // Tag "Bürgermeister" floating above when standing still
+  if (!lutz.moving && state === 'playing') {
+    const labelY = y - 16;
+    ctx.fillStyle = '#1C3A5E';
+    ctx.fillRect(x - 8, labelY, 30, 8);
+    ctx.fillStyle = '#D4A437';
+    ctx.fillRect(x - 8, labelY, 30, 1);
+    ctx.fillStyle = '#F2EDE3';
+    ctx.font = 'bold 6px monospace';
+    ctx.fillText('LUTZ', x + 2, labelY + 6);
+  }
+}
+
+// ============== HELPERS ==============
+function lighten(hex, amount) {
+  const c = hexToRgb(hex);
+  return rgbToHex(
+    Math.min(255, c.r + Math.floor(255 * amount)),
+    Math.min(255, c.g + Math.floor(255 * amount)),
+    Math.min(255, c.b + Math.floor(255 * amount))
+  );
+}
+
+function darken(hex, amount) {
+  const c = hexToRgb(hex);
+  return rgbToHex(
+    Math.max(0, c.r - Math.floor(255 * amount)),
+    Math.max(0, c.g - Math.floor(255 * amount)),
+    Math.max(0, c.b - Math.floor(255 * amount))
+  );
+}
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return {
+    r: parseInt(h.substring(0, 2), 16),
+    g: parseInt(h.substring(2, 4), 16),
+    b: parseInt(h.substring(4, 6), 16)
+  };
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+// ============== RENDER ==============
+function render() {
+  clear();
+  drawGrass();
+
+  // Sort buildings/trees by Y for proper depth
+  // Top side buildings first (smaller y)
+  const topBuildings = buildings.filter(b => b.y < ROAD_Y);
+  const bottomBuildings = buildings.filter(b => b.y >= ROAD_Y);
+  const topTrees = trees.filter(t => t.y < ROAD_Y);
+  const bottomTrees = trees.filter(t => t.y >= ROAD_Y);
+
+  topBuildings.forEach(drawBuilding);
+  topTrees.forEach(drawTree);
+
+  drawRoad();
+
+  // Lamp posts on top side draw before residents on top side
+  lamps.filter(l => l.y < ROAD_Y + ROAD_H/2).forEach(drawLamp);
+
+  // Residents on top side
+  residents.filter(r => r.y < ROAD_Y).forEach(drawResident);
+
+  // Lutz — draw based on position relative to road
+  if (lutz.y < ROAD_Y + ROAD_H/2) {
+    drawLutz();
+  }
+
+  // Residents on bottom side
+  residents.filter(r => r.y >= ROAD_Y).forEach(drawResident);
+
+  // Lutz if on bottom
+  if (lutz.y >= ROAD_Y + ROAD_H/2) {
+    drawLutz();
+  }
+
+  lamps.filter(l => l.y >= ROAD_Y + ROAD_H/2).forEach(drawLamp);
+
+  // Bottom buildings & trees
+  bottomBuildings.forEach(drawBuilding);
+  bottomTrees.forEach(drawTree);
+
+  // Subtle vignette
+  const grad = ctx.createRadialGradient(W/2, H/2, W/3, W/2, H/2, W/1.2);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ============== LOOP ==============
+function loop() {
+  update();
+  render();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>

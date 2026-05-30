@@ -208,7 +208,7 @@
 
       <div class="tutorial-row">
         <div class="tutorial-icon walk">▲</div>
-        <div class="tutorial-text">Lauf mit dem <strong>D-PAD</strong> die Straße entlang.</div>
+        <div class="tutorial-text">Lauf mit dem <strong>Steuerkreuz</strong> die Straße entlang.</div>
       </div>
       <div class="tutorial-row">
         <div class="tutorial-icon talk">A</div>
@@ -216,7 +216,7 @@
       </div>
       <div class="tutorial-row">
         <div class="tutorial-icon timer">⏳</div>
-        <div class="tutorial-text"><strong>ACHTUNG:</strong> Über jedem Anwohner läuft eine Uhr. Wird sie rot und leer, geht die Person ins Haus — verpasst!</div>
+        <div class="tutorial-text"><strong>ACHTUNG:</strong> Über jedem Anwohner läuft eine Uhr. Wird sie rot und leer, geht die Person ins Haus. Verpasst!</div>
       </div>
 
       <button class="start-btn" id="startBtn">TOUR STARTEN</button>
@@ -352,7 +352,7 @@ const residents = [
     waitTime: 60 * 85,
     dialog: [
       { speaker: 'FAM. WALTHER', text: 'Wir kommen grad vom Spielplatz. Das Springbrunnenfest war dieses Jahr wieder so schön!' },
-      { speaker: 'BÜRGERMEISTER', text: 'Glück auf! Oh ja und wir hatten so tolles Wetter. Im nächsten Jahr passt auf eure Bratwürste auf, Kimbo will sich da bestimmt was mopsen.' }
+      { speaker: 'BÜRGERMEISTER', text: 'Glück auf! Oh ja und wir hatten so tolles Wetter. Passt nächstes Jahr auf eure Bratwürste auf, Kimbo will sich da bestimmt eine mopsen.' }
     ],
     visited: false, gone: false, walkOff: 0
   },
@@ -461,7 +461,7 @@ const residents = [
     id: 'miau', name: 'FRAU...',
     x: ROAD_X - 22, y: 2280, side: 'left',
     shirtColor: '#7a5090', hairColor: '#6a5a48', skinColor: '#e8b08a',
-    age: 'adult', kimboAction: 'sniff', hasCat: true,
+    age: 'adult', kimboAction: 'sniff', hasCat: false,
     waitTime: 60 * 110,
     dialog: [
       { speaker: 'FRAU...', text: 'Miau.' },
@@ -498,8 +498,8 @@ const stations = [
     label: 'GASTHAUS THAN', kimboWuff: true, givesBeer: true,
     useSprite: 'than',
     dialog: [
-      { speaker: 'BÜRGERMEISTER', text: 'Beim Than war ich schon Stammgast, als ich noch keiner war.' },
-      { speaker: 'BÜRGERMEISTER', text: 'Heute Abend — da gibt\'s ein Bier auf die fertige Straße. Wer kommt mit?' },
+      { speaker: 'BÜRGERMEISTER', text: 'Beim Gasthaus Than war ich schon Stammgast, als es noch keiner war.' },
+      { speaker: 'BÜRGERMEISTER', text: 'Heute gibt\'s ein Bier auf die fertige Straße.' },
       { speaker: 'WIRT', text: '(reicht Lutz ein Bier) Auf die Straße, Bürgermeister! Glück auf!' }
     ],
     visited: false
@@ -509,7 +509,7 @@ const stations = [
     label: 'KINO', kimboWuff: true,
     dialog: [
       { speaker: 'BÜRGERMEISTER', text: 'Hier war das Kino. Manche im Dorf sind mit den ABBA-Filmen groß geworden.' },
-      { speaker: 'BÜRGERMEISTER', text: 'Viel ist nicht geblieben, aber die Geschichten.' }
+      { speaker: 'BÜRGERMEISTER', text: 'Viel ist nicht mehr zu sehen, aber die Geschichten bleiben.' }
     ],
     visited: false
   },
@@ -778,8 +778,8 @@ function endGame() {
   document.getElementById('endStars').innerHTML = starsHTML;
   document.getElementById('endVisited').textContent = visitedCount;
   document.getElementById('endMessage').innerHTML =
-    stars === 3 ? 'Glück auf, Hohndorf!<br>Alle besucht.' :
-    stars === 2 ? 'Glück auf, Hohndorf!<br>Fast alle erreicht.' :
+    stars === 3 ? 'Glück auf, Hohndorf!<br>Alle besucht, Hurra!' :
+    stars === 2 ? 'Glück auf, Hohndorf!<br>Fast alle erreicht. Versuchs nochmal.' :
     'Glück auf — die Tour ist geschafft.';
   document.getElementById('endScreen').style.display = 'flex';
 }

@@ -298,12 +298,12 @@ let musicErrored = false;
 bgMusic.addEventListener('error', () => {
   musicErrored = true;
   musicBtn.textContent = '♪ ?';
-  musicBtn.title = 'Datei hohndorf-musik.mp3 nicht gefunden';
+  musicBtn.title = 'Datei hohndorfmusik.mp3 nicht gefunden';
 });
 
 musicBtn.addEventListener('click', () => {
   if (musicErrored) {
-    alert('Musik-Datei nicht gefunden.\n\nBitte eine Datei namens "hohndorf-musik.mp3" in den gleichen Ordner wie die HTML legen.');
+    alert('Musik-Datei nicht gefunden.\n\nBitte eine Datei namens "hohndorfmusik.mp3" in den gleichen Ordner wie die HTML legen.');
     return;
   }
   musicOn = !musicOn;
